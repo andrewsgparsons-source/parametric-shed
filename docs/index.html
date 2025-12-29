@@ -1,4 +1,4 @@
-<!-- path: docs/index.html -->
+// FILE: docs/index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,6 +86,22 @@
       pointer-events: none !important; opacity: 0 !important;
     }
 
+    /* Minimal hard kill-switch for zero-leakage 3D mode */
+    body[data-view="3d"] .page { display: none !important; }
+    body[data-view="3d"] #ui-layer, body[data-view="3d"] #controls,
+    body[data-view="3d"] [id*="sidebar" i], body[data-view="3d"] [class*="sidebar" i],
+    body[data-view="3d"] [id*="panel" i],   body[data-view="3d"] [class*="panel" i],
+    body[data-view="3d"] [id*="inspector" i], body[data-view="3d"] [class*="inspector" i],
+    body[data-view="3d"] [id*="gui" i], body[data-view="3d"] [class*="gui" i],
+    body[data-view="3d"] .dg.ac {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important; max-width: 0 !important;
+      height: 0 !important; max-height: 0 !important;
+      position: fixed !important; right: -9999px !important; left: auto !important; overflow: hidden !important;
+      pointer-events: none !important; opacity: 0 !important;
+    }
+
     @media print {
       #topbar, #renderCanvas, #statusOverlay { display: none !important; }
       body, html { overflow: visible !important; height: auto !important; }
@@ -95,7 +111,7 @@
     }
   </style>
 </head>
-<body>
+<body data-view="3d">
   <!-- View: 3D Scene -->
   <canvas id="renderCanvas" aria-hidden="true"></canvas>
   <div id="statusOverlay">status...</div>
@@ -111,7 +127,7 @@
 
   <!-- View: Base Cutting List -->
   <div id="bomPage" class="page" aria-hidden="true">
-    <h2>Master Cutting & Assembly Schedule</h2>
+    <h2>Master Cutting &amp; Assembly Schedule</h2>
 
     <div id="bomToolbar">
       <label for="unitsSelect" style="font-size:12px;color:#555;">Units:</label>
@@ -193,101 +209,10 @@
   <!-- App script (3D + calculators) -->
   <script type="module" src="src/index.js"></script>
 
-  <!-- Strict view controller + aggressive sidebar removal -->
-  <script>
-    (function strictUI() {
-      const canvas = document.getElementById('renderCanvas');
-      const basePage = document.getElementById('bomPage');
-      const wallsPage = document.getElementById('wallsBomPage');
-      const sel = document.getElementById('viewSelect');
-
-      function showOnly(view) {
-        const is3d = view === '3d';
-        const isBase = view === 'base';
-        const isWalls = view === 'walls';
-
-        if (canvas) {
-          canvas.style.display = is3d ? 'block' : 'none';
-          canvas.setAttribute('aria-hidden', String(!is3d));
-        }
-        if (basePage) {
-          basePage.style.display = isBase ? 'block' : 'none';
-          basePage.setAttribute('aria-hidden', String(!isBase));
-          if (isBase) basePage.scrollTop = 0;
-        }
-        if (wallsPage) {
-          wallsPage.style.display = isWalls ? 'block' : 'none';
-          wallsPage.setAttribute('aria-hidden', String(!isWalls));
-          if (isWalls) wallsPage.scrollTop = 0;
-        }
-        purgeSidebars();
-      }
-
-      // Aggressive removal of any sidebar/panel injected by other scripts
-      function purgeSidebars(root = document) {
-        const suspects = [
-          '#ui-layer', '#controls',
-          '[id*="sidebar" i]', '[class*="sidebar" i]',
-          '[id*="panel" i]',   '[class*="panel" i]',
-          '[id*="inspector" i]', '[class*="inspector" i]',
-          '[id*="gui" i]', '[class*="gui" i]',
-          '.dg.ac' // dat.GUI default
-        ];
-        try {
-          root.querySelectorAll(suspects.join(',')).forEach(el => {
-            try { el.remove(); } catch { /* ignore */ }
-          });
-        } catch { /* ignore */ }
-
-        // Heuristic: remove any fixed/absolute element hugging the right edge > 200px wide
-        try {
-          const all = Array.from(root.querySelectorAll('body *'));
-          for (const el of all) {
-            const st = getComputedStyle(el);
-            if (!st || (st.display === 'none')) continue;
-            const pos = st.position;
-            if (pos !== 'fixed' && pos !== 'absolute') continue;
-
-            const rect = el.getBoundingClientRect();
-            if (!rect || rect.width === 0 || rect.height === 0) continue;
-
-            const nearRight = (window.innerWidth - rect.right) <= 2; // glued to right edge
-            const bigEnough = rect.width >= 200 && rect.height >= 100;
-            const zHigh = parseInt(st.zIndex || '0', 10) >= 1000;
-
-            if (nearRight && bigEnough && zHigh) {
-              // Do not remove our own topbar
-              if (el.id === 'topbar' || el.contains(document.getElementById('topbar'))) continue;
-              try { el.remove(); } catch { /* ignore */ }
-            }
-          }
-        } catch { /* ignore */ }
-      }
-
-      // Observe DOM for late-injected sidebars/panels
-      const mo = new MutationObserver(muts => {
-        for (const m of muts) {
-          if (m.addedNodes && m.addedNodes.length) purgeSidebars(document);
-        }
-      });
-      mo.observe(document.documentElement, { childList: true, subtree: true });
-
-      // Hook up selector
-      if (sel) {
-        sel.addEventListener('change', e => showOnly(e.target.value));
-      }
-
-      // Initial state (force 3D only)
-      showOnly(sel ? sel.value : '3d');
-
-      // Ensure canvas always sits behind pages but fills screen
-      window.addEventListener('resize', () => {
-        if (canvas) {
-          canvas.style.width = '100vw';
-          canvas.style.height = '100vh';
-        }
-      });
-    })();
+  <!-- Views controller (3D/Base/Walls only) -->
+  <script type="module">
+    import { initViews } from './src/views.js';
+    initViews();
   </script>
 </body>
 </html>
