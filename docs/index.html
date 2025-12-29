@@ -1,4 +1,4 @@
-<!-- FILE: docs/index.html -->
+<!-- path: docs/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,29 +11,7 @@
 
     #renderCanvas { position: absolute; inset: 0; width: 100%; height: 100%; outline: none; display: block; }
 
-    /* Overlay layer for inputs */
-    #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-    #controls {
-      position: absolute;
-      top: 80px;               /* below topbar */
-      right: 20px;             /* moved off the left edge */
-      left: auto;              /* ensure no left anchoring */
-      width: 280px;
-      max-width: calc(100vw - 40px);
-      background: var(--panel);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-      pointer-events: auto;
-      max-height: 80vh;
-      overflow: auto;
-    }
-    .field { margin-bottom: 12px; }
-    label { display: block; font-size: 11px; font-weight: bold; color: #888; margin-bottom: 4px; }
-    input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-    .vis-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; font-size: 14px; }
-
-    /* Topbar moved OUTSIDE ui-layer */
+    /* Topbar */
     #topbar {
       position: absolute; top: 20px; right: 20px;
       z-index: 100000; pointer-events: auto;
@@ -63,15 +41,12 @@
     .subtle { color: #666; font-size: 12px; margin: 6px 0 12px 0; }
 
     @media print {
-      #ui-layer, #topbar, #renderCanvas, #statusOverlay { display: none !important; }
+      #topbar, #renderCanvas, #statusOverlay { display: none !important; }
       body, html { overflow: visible !important; height: auto !important; }
       .page { padding: 0 10mm !important; box-shadow: none !important; background: #fff !important; display: block !important; }
       #bomToolbar { display: none !important; }
       .sticky-table thead th { top: 0; }
     }
-
-    /* Bulletproof hiding: hide entire overlay layer, topbar stays */
-    body.ui-hidden #ui-layer { display: none !important; }
 
     /* On-screen diagnostics overlay */
     #statusOverlay{
@@ -209,66 +184,6 @@
     </table>
   </div>
 
-  <div id="ui-layer">
-    <div id="controls">
-      <h3 style="margin:0 0 15px 0">Shed Specs (mm)</h3>
-      <div class="field"><label>WIDTH</label><input type="number" id="wInput" value="3000" /></div>
-      <div class="field"><label>DEPTH</label><input type="number" id="dInput" value="4000" /></div>
-
-      <h3 style="margin:20px 0 10px 0">Visibility (Walls)</h3>
-      <div class="vis-row"><span>Walls</span><input type="checkbox" id="vWalls" checked /></div>
-
-      <h3 style="margin:20px 0 10px 0">Visibility</h3>
-      <div class="vis-row"><span>Grids</span><input type="checkbox" id="vBase" checked /></div>
-      <div class="vis-row"><span>Frame</span><input type="checkbox" id="vFrame" checked /></div>
-      <div class="vis-row"><span>Insulation</span><input type="checkbox" id="vIns" checked /></div>
-      <div class="vis-row"><span>Decking</span><input type="checkbox" id="vDeck" checked /></div>
-
-      <h3 style="margin:20px 0 10px 0">Walls Visibility</h3>
-      <div class="vis-row"><span>Front</span><input type="checkbox" id="vWallFront" checked /></div>
-      <div class="vis-row"><span>Back</span><input type="checkbox" id="vWallBack" checked /></div>
-      <div class="vis-row"><span>Left</span><input type="checkbox" id="vWallLeft" checked /></div>
-      <div class="vis-row"><span>Right</span><input type="checkbox" id="vWallRight" checked /></div>
-
-      <h3 style="margin:20px 0 10px 0">Dimension Mode</h3>
-      <div class="field">
-        <label>MODE</label>
-        <select id="dimMode">
-          <option value="base" selected>base</option>
-          <option value="frame">frame</option>
-          <option value="roof">roof</option>
-        </select>
-      </div>
-
-      <h3 style="margin:20px 0 10px 0">Roof Overhang (mm)</h3>
-      <div class="field"><label>UNIFORM</label><input type="number" id="roofOverUniform" value="0" /></div>
-      <div class="field"><label>FRONT</label><input type="number" id="roofOverFront" placeholder="" /></div>
-      <div class="field"><label>BACK</label><input type="number" id="roofOverBack" placeholder="" /></div>
-      <div class="field"><label>LEFT</label><input type="number" id="roofOverLeft" placeholder="" /></div>
-      <div class="field"><label>RIGHT</label><input type="number" id="roofOverRight" placeholder="" /></div>
-
-      <h3 style="margin:20px 0 10px 0">Walls</h3>
-      <div class="field">
-        <label>VARIANT</label>
-        <select id="wallsVariant">
-          <option value="insulated">insulated</option>
-          <option value="basic">basic</option>
-        </select>
-      </div>
-      <div class="field"><label>WALL HEIGHT</label><input type="number" id="wallHeight" value="2400" /></div>
-
-      <h3 style="margin:20px 0 10px 0">Openings</h3>
-      <div class="vis-row"><span>Door Enabled</span><input type="checkbox" id="doorEnabled" /></div>
-      <div class="field"><label>DOOR X (from left)</label><input type="number" id="doorX" value="800" /></div>
-      <div class="field"><label>DOOR WIDTH</label><input type="number" id="doorW" value="900" /></div>
-      <div class="field"><label>DOOR HEIGHT</label><input type="number" id="doorH" value="2000" /></div>
-    </div>
-  </div>
-
   <script type="module" src="src/index.js"></script>
 </body>
 </html>
-
-
-<!-- FILE: docs/src/index.js -->
-// (no changes required for sidebar removal; canvas is already full-screen and resize logic doesn't subtract sidebar)
