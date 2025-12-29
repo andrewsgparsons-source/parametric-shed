@@ -256,31 +256,6 @@
     </div>
   </div>
 
-</script>
-  <script src="https://cdn.babylonjs.com/babylon.js"></script>
- <script type="module">
-  const overlay = document.getElementById("statusOverlay");
-  const append = (msg) => {
-    if (!overlay) return;
-    overlay.textContent = (overlay.textContent ? overlay.textContent + "\n" : "") + msg;
-  };
-
-  append("module loader: starting import('./src/index.js')");
-
-  try {
-    await import("./src/index.js");
-    append("module loader: import ./src/index.js: OK");
-  } catch (e) {
-    append("module loader: import ./src/index.js: FAILED");
-    append("error: " + String(e && e.message ? e.message : e));
-  }
-
-  append("window.__dbg present: " + (window.__dbg ? "YES" : "NO"));
-  if (window.__dbg) {
-    append("initStarted: " + String(window.__dbg.initStarted));
-    append("initFinished: " + String(window.__dbg.initFinished));
-    if (window.__dbg.lastError) append("lastError: " + String(window.__dbg.lastError));
-  }
 <script type="module" src="/docs/src/index.js"></script>
 </body>
   </html>
