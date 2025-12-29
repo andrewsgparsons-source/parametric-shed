@@ -281,69 +281,7 @@
     append("initFinished: " + String(window.__dbg.initFinished));
     if (window.__dbg.lastError) append("lastError: " + String(window.__dbg.lastError));
   }
-<script type="module">
-  const overlay = document.getElementById("statusOverlay");
-  const append = (msg) => {
-    if (!overlay) return;
-    overlay.textContent = (overlay.textContent ? overlay.textContent + "\n" : "") + msg;
-  };
-
-  const url = "./src/index.js?v=" + Date.now();
-
-  append("diagnostic loader: fetching " + url);
-
-  function countChar(s, ch) {
-    let n = 0;
-    for (let i = 0; i < s.length; i++) if (s[i] === ch) n++;
-    return n;
-  }
-  function countSubstr(s, sub) {
-    let n = 0, i = 0;
-    while (true) {
-      i = s.indexOf(sub, i);
-      if (i === -1) return n;
-      n++; i += sub.length;
-    }
-  }
-
-  let text = "";
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    append("fetch: " + res.status + " " + res.statusText);
-    append("content-type: " + (res.headers.get("content-type") || "(none)"));
-    text = await res.text();
-    append("bytes: " + text.length);
-
-    const last200 = text.slice(Math.max(0, text.length - 200));
-    append("last200:\n" + last200);
-
-    const backticks = countChar(text, "`");
-    const blockOpen = countSubstr(text, "/*");
-    const blockClose = countSubstr(text, "*/");
-    append("backticks count: " + backticks + (backticks % 2 ? "  <-- ODD (bad)" : "  (even)"));
-    append("block comments: /*=" + blockOpen + "  */=" + blockClose + (blockOpen !== blockClose ? "  <-- MISMATCH (bad)" : "  (ok)"));
-
-    // quick brace balance (heuristic; ignores strings/comments but still useful)
-    const opens = countChar(text, "{") + countChar(text, "(") + countChar(text, "[");
-    const closes = countChar(text, "}") + countChar(text, ")") + countChar(text, "]");
-    append("brace-ish totals: opens=" + opens + " closes=" + closes + (opens !== closes ? "  <-- MISMATCH (bad)" : "  (ok)"));
-  } catch (e) {
-    append("fetch/index.js failed: " + String(e && e.message ? e.message : e));
-  }
-
-  append("diagnostic loader: now trying import('./src/index.js')");
-
-  try {
-    await import("./src/index.js?v=" + Date.now());
-    append("import: OK");
-  } catch (e) {
-    append("import: FAILED");
-    append("error: " + String(e && e.message ? e.message : e));
-  }
-
-  append("window.__dbg present: " + (window.__dbg ? "YES" : "NO"));
-</script>
-</script>
+<script type="module" src="/docs/src/index.js"></script>
 </body>
   </html>
         
