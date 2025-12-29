@@ -1,4 +1,4 @@
-// FILE: docs/index.html
+<!-- FILE: docs/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,10 +14,19 @@
     /* Overlay layer for inputs */
     #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
     #controls {
-      position: absolute; top: 20px; left: 20px; width: 280px;
-      background: var(--panel); padding: 20px; border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.15); pointer-events: auto;
-      max-height: 80vh; overflow: auto;
+      position: absolute;
+      top: 80px;               /* below topbar */
+      right: 20px;             /* moved off the left edge */
+      left: auto;              /* ensure no left anchoring */
+      width: 280px;
+      max-width: calc(100vw - 40px);
+      background: var(--panel);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      pointer-events: auto;
+      max-height: 80vh;
+      overflow: auto;
     }
     .field { margin-bottom: 12px; }
     label { display: block; font-size: 11px; font-weight: bold; color: #888; margin-bottom: 4px; }
@@ -256,7 +265,10 @@
     </div>
   </div>
 
-<script type="module" src="src/index.js"></script>
+  <script type="module" src="src/index.js"></script>
 </body>
-  </html>
-        
+</html>
+
+
+<!-- FILE: docs/src/index.js -->
+// (no changes required for sidebar removal; canvas is already full-screen and resize logic doesn't subtract sidebar)
