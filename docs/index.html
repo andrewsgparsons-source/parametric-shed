@@ -9,37 +9,37 @@
     :root { --primary:#007bff; --panel:#ffffff; --bg:#f0f2f5; }
 
     html, body {
-      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      width: 100%; height: 100%; margin: 0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       background: #000;
     }
 
     /* 3D canvas (View: 3D scene) */
     #renderCanvas {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      display: none; outline: none; /* hidden by default; shown when view=3d */
+      position: fixed; inset: 0; width: 100vw; height: 100vh;
+      display: none; outline: none;
     }
 
     /* Top-right view selector (always visible) */
     #topbar {
-      position: absolute; top: 20px; right: 20px;
-      z-index: 100000; display: flex; gap: 8px; align-items: center;
+      position: fixed; top: 16px; right: 16px;
+      z-index: 2147483000; /* above any overlay */
+      display: flex; gap: 8px; align-items: center;
       pointer-events: auto;
     }
-    #topbar * { pointer-events: auto; }
     #viewSelect {
-      padding: 12px 16px; border-radius: 8px; cursor: pointer; border: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-weight: bold; background: #fff;
+      padding: 10px 14px; border-radius: 8px; cursor: pointer; border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: 600; background: #fff;
     }
 
     /* Generic “page” layout (Views: Base & Walls cutting lists) */
     .page {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      background: var(--bg); display: none; overflow-y: auto;
-      padding: 80px 40px; box-sizing: border-box; z-index: 20;
+      position: fixed; inset: 0; width: 100vw; height: 100vh;
+      background: var(--bg); display: none; overflow: auto;
+      padding: 80px 24px 24px; box-sizing: border-box; z-index: 1000;
     }
 
-    /* Shared cutting-list look & feel */
+    /* Shared cutting-list look & feel (mirrors Base layout) */
     .schedule-section { margin-bottom: 30px; }
     h2 { margin: 0 0 20px 0; text-align: center; }
     h4 {
@@ -62,22 +62,34 @@
       padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer;
     }
 
-    /* Diagnostics overlay (optional) */
+    /* Diagnostics overlay (optional; default hidden) */
     #statusOverlay{
       position:fixed; top:10px; left:50%; transform:translateX(-50%);
-      z-index:100000; background:rgba(0,0,0,0.75); color:#fff;
+      z-index:2147483000; background:rgba(0,0,0,0.75); color:#fff;
       padding:8px 10px; border-radius:8px; font:12px/1.3 monospace;
       max-width:95vw; white-space:pre-wrap; pointer-events:none;
-      display:none; /* keep hidden unless used intentionally */
+      display:none;
     }
 
-    /* Kill any legacy sidebar if scripts/styles try to add it */
-    #ui-layer, #controls { display: none !important; visibility: hidden !important; }
+    /* Absolute CSS kill-switches for common sidebars/panels (both left and right) */
+    #ui-layer, #controls,
+    [id*="sidebar" i], [class*="sidebar" i],
+    [id*="panel" i],   [class*="panel" i],
+    [id*="inspector" i], [class*="inspector" i],
+    [id*="gui" i], [class*="gui" i],
+    .dg.ac /* dat.GUI */ {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important; max-width: 0 !important;
+      height: 0 !important; max-height: 0 !important;
+      position: fixed !important; right: -9999px !important; left: auto !important; overflow: hidden !important;
+      pointer-events: none !important; opacity: 0 !important;
+    }
 
     @media print {
       #topbar, #renderCanvas, #statusOverlay { display: none !important; }
       body, html { overflow: visible !important; height: auto !important; }
-      .page { padding: 0 10mm !important; box-shadow: none !important; background: #fff !important; display: block !important; }
+      .page { padding: 0 10mm !important; box-shadow: none !important; background: #fff !important; display: block !important; position: static !important; height: auto !important; }
       #bomToolbar { display: none !important; }
       .sticky-table thead th { top: 0; }
     }
@@ -86,6 +98,7 @@
 <body>
   <!-- View: 3D Scene -->
   <canvas id="renderCanvas" aria-hidden="true"></canvas>
+  <div id="statusOverlay">status...</div>
 
   <!-- View switcher -->
   <div id="topbar">
@@ -96,7 +109,7 @@
     </select>
   </div>
 
-  <!-- View: Base Cutting List (unchanged layout) -->
+  <!-- View: Base Cutting List -->
   <div id="bomPage" class="page" aria-hidden="true">
     <h2>Master Cutting & Assembly Schedule</h2>
 
@@ -157,10 +170,9 @@
     </div>
   </div>
 
-  <!-- View: Walls Cutting List (matches Base layout style) -->
+  <!-- View: Walls Cutting List (same look as Base) -->
   <div id="wallsBomPage" class="page" aria-hidden="true">
     <h2>Walls Cutting List</h2>
-
     <div class="schedule-section">
       <h4>Walls — Items</h4>
       <table class="sticky-table">
@@ -181,9 +193,9 @@
   <!-- App script (3D + calculators) -->
   <script type="module" src="src/index.js"></script>
 
-  <!-- Strict view controller: exactly ONE view shown at a time -->
+  <!-- Strict view controller + aggressive sidebar removal -->
   <script>
-    (function strictViewController() {
+    (function strictUI() {
       const canvas = document.getElementById('renderCanvas');
       const basePage = document.getElementById('bomPage');
       const wallsPage = document.getElementById('wallsBomPage');
@@ -194,7 +206,6 @@
         const isBase = view === 'base';
         const isWalls = view === 'walls';
 
-        // Toggle displays explicitly
         if (canvas) {
           canvas.style.display = is3d ? 'block' : 'none';
           canvas.setAttribute('aria-hidden', String(!is3d));
@@ -202,7 +213,6 @@
         if (basePage) {
           basePage.style.display = isBase ? 'block' : 'none';
           basePage.setAttribute('aria-hidden', String(!isBase));
-          // Ensure the page scroll starts at the top when shown
           if (isBase) basePage.scrollTop = 0;
         }
         if (wallsPage) {
@@ -210,24 +220,73 @@
           wallsPage.setAttribute('aria-hidden', String(!isWalls));
           if (isWalls) wallsPage.scrollTop = 0;
         }
-
-        // Absolute kill switch for any legacy UI that might be injected
-        const overlay = document.getElementById('ui-layer');
-        const controls = document.getElementById('controls');
-        if (overlay) overlay.remove();
-        if (controls) controls.remove();
+        purgeSidebars();
       }
+
+      // Aggressive removal of any sidebar/panel injected by other scripts
+      function purgeSidebars(root = document) {
+        const suspects = [
+          '#ui-layer', '#controls',
+          '[id*="sidebar" i]', '[class*="sidebar" i]',
+          '[id*="panel" i]',   '[class*="panel" i]',
+          '[id*="inspector" i]', '[class*="inspector" i]',
+          '[id*="gui" i]', '[class*="gui" i]',
+          '.dg.ac' // dat.GUI default
+        ];
+        try {
+          root.querySelectorAll(suspects.join(',')).forEach(el => {
+            try { el.remove(); } catch { /* ignore */ }
+          });
+        } catch { /* ignore */ }
+
+        // Heuristic: remove any fixed/absolute element hugging the right edge > 200px wide
+        try {
+          const all = Array.from(root.querySelectorAll('body *'));
+          for (const el of all) {
+            const st = getComputedStyle(el);
+            if (!st || (st.display === 'none')) continue;
+            const pos = st.position;
+            if (pos !== 'fixed' && pos !== 'absolute') continue;
+
+            const rect = el.getBoundingClientRect();
+            if (!rect || rect.width === 0 || rect.height === 0) continue;
+
+            const nearRight = (window.innerWidth - rect.right) <= 2; // glued to right edge
+            const bigEnough = rect.width >= 200 && rect.height >= 100;
+            const zHigh = parseInt(st.zIndex || '0', 10) >= 1000;
+
+            if (nearRight && bigEnough && zHigh) {
+              // Do not remove our own topbar
+              if (el.id === 'topbar' || el.contains(document.getElementById('topbar'))) continue;
+              try { el.remove(); } catch { /* ignore */ }
+            }
+          }
+        } catch { /* ignore */ }
+      }
+
+      // Observe DOM for late-injected sidebars/panels
+      const mo = new MutationObserver(muts => {
+        for (const m of muts) {
+          if (m.addedNodes && m.addedNodes.length) purgeSidebars(document);
+        }
+      });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
 
       // Hook up selector
       if (sel) {
-        sel.addEventListener('change', (e) => {
-          const v = e.target.value;
-          showOnly(v);
-        });
+        sel.addEventListener('change', e => showOnly(e.target.value));
       }
 
       // Initial state (force 3D only)
       showOnly(sel ? sel.value : '3d');
+
+      // Ensure canvas always sits behind pages but fills screen
+      window.addEventListener('resize', () => {
+        if (canvas) {
+          canvas.style.width = '100vw';
+          canvas.style.height = '100vh';
+        }
+      });
     })();
   </script>
 </body>
